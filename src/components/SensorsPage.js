@@ -1,11 +1,13 @@
 import React, {useEffect, useState} from "react";
 import SensorService from "../service/SensorService";
+import SensorDataService from "../service/SensorDataService";
 
 const SensorsPage = () => {
     const [sensors, setSensors] = useState([]);
     const [newSensor, setNewSensor] = useState({name: "", deviceName: ""});
     const [selectedSensor, setSelectedSensor] = useState(null);
     const [originalSensor, setOriginalSensor] = useState(null);
+    const [sensorData, setSensorData] = useState([]);
 
     useEffect(() => {
         loadSensors();
@@ -53,6 +55,44 @@ const SensorsPage = () => {
             } catch (error) {
                 console.error("Error deleting sensor:", error);
             }
+        }
+    };
+
+    const fetchSensorDataByName = async (sensorName) => {
+        try {
+            const response = await SensorDataService.getSensorDataByName(sensorName);
+            setSensorData(response.data);
+        } catch (e) {
+            alert(`Error fetching sensor data for "${sensorName}": ${e.message}`);
+        }
+    };
+
+    const handleAddSensorData = async (e) => {
+        e.preventDefault();
+        try {
+            await SensorDataService.addSensorData(newSensorData);
+            setNewSensorData({temperature: '', usageEnergy: '', sensor: {id: ''}});
+        } catch (e) {
+            alert(`Error adding sensor data: ${e.message}`);
+        }
+    };
+
+    //
+    // const handleCreateSensor = async () => {
+    //     try {
+    //         await SensorService.createSensor(newSensor);
+    //         setNewSensor({name: "", deviceName: ""});
+    //         loadSensors();
+    //     } catch (error) {
+    //         console.error("Error creating sensor:", error);
+    //     }
+    // };
+
+    const handleDeleteSensorData = async (id) => {
+        try {
+            await SensorDataService.deleteSensorData(id);
+        } catch (e) {
+            alert(`Error deleting sensor data: ${e.message}`);
         }
     };
 

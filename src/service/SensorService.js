@@ -14,7 +14,6 @@ class SensorService {
     }
 
     updateSensor(sensor) {
-        console.log(sensor);
         return axios.put(BASE_URL + 'sensor-update', sensor, AuthService.getAuthHeader());
     }
 

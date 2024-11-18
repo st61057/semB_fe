@@ -10,7 +10,7 @@ function UsersPage() {
     const [user, setUser] = useState(null);
     const [userDevices, setUserDevices] = useState([]);
     const [newDevice, setNewDevice] = useState({username: "", deviceName: ""});
-    const [updateUserDto, setUpdateUserDto] = useState({username: "", email: ""});
+    const [updateUserDto, setUpdateUserDto] = useState({loggedUsername: "", username: "", email: ""});
     const [passwordData, setPasswordData] = useState({oldPassword: "", newPassword: ""});
 
     // Načítání dat při načtení komponenty
@@ -20,7 +20,7 @@ function UsersPage() {
         } else {
             loadUserInfo();
         }
-    }, []);
+    });
 
     // Načte informace o uživateli
     const loadUserInfo = async () => {
@@ -63,6 +63,7 @@ function UsersPage() {
     // Aktualizuje informace o uživateli
     const handleUpdateUser = async () => {
         try {
+            updateUserDto.loggedUsername = user.username;
             const response = await UserService.updateUser(updateUserDto);
             setUser(response.data);
             setUpdateUserDto({username: "", email: ""});
@@ -135,14 +136,12 @@ function UsersPage() {
                 type="text"
                 placeholder="New Username"
                 value={updateUserDto.username}
-                onChange={(e) => setUpdateUserDto({...updateUserDto, username: e.target.value})}
-            />
+                onChange={(e) => setUpdateUserDto({...updateUserDto, username: e.target.value})}/>
             <input
                 type="email"
                 placeholder="New Email"
                 value={updateUserDto.email}
-                onChange={(e) => setUpdateUserDto({...updateUserDto, email: e.target.value})}
-            />
+                onChange={(e) => setUpdateUserDto({...updateUserDto, email: e.target.value})}/>
             <button onClick={handleUpdateUser}>Update User Info</button>
 
             <h2>Change Password</h2>

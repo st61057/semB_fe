@@ -12,30 +12,18 @@ function Login() {
     }, []);
 
 
-    const login = /*async*/ (event) => {
+    const login = async (event) => {
         event.preventDefault();
-        AuthService.login(loginData).then(res => {
-            if (res.status === 200) {
-                console.log(res);
-                localStorage.setItem("userInfo", JSON.stringify(res.data));
-                navigate('/');
-            }
-        }).catch(error => {
-            alert(error.response.data);
-        });
 
-
-
-        // event.preventDefault();
-        //
-        // try {
-        //     const response = await AuthService.login(loginData);
-        //     localStorage.setItem("userInfo", JSON.stringify(response.data.token));
-        //     navigate('/register')
-        // } catch (error) {
-        //     alert("Login failed: " + error.response?.data || error.message);
-        //     // setMessage("Login failed: " + error.response?.data || error.message);
-        // }
+        try {
+            const response = await AuthService.login(loginData);
+            localStorage.setItem("userInfo", JSON.stringify(response.data));
+            navigate('/')
+            window.location.reload();
+        } catch (error) {
+            alert("Login failed: " + error.response?.data || error.message);
+            // setMessage("Login failed: " + error.response?.data || error.message);
+        }
     };
 
     return (
