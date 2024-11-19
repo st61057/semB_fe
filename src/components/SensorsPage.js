@@ -87,23 +87,25 @@ const SensorsPage = () => {
             <ul>
                 {sensors.map((sensor) => (
                     <li key={sensor.name}>
-                        Sensor name: {sensor.name} - Sensors data{" "}
-                        {sensor.sensorDataDto ? sensor.sensorDataDto.temperature : "No data to sensor"}
+                        Sensor name: {sensor.name} - Sensor data:{" "}
+                        {sensor.sensorDataDto && sensor.sensorDataDto.length > 0 ? (
+                            <ul>
+                                {sensor.sensorDataDto.map((data, index) => (
+                                    <li key={index}>
+                                        Time: {data.dataMeasuredTime}, Temperature: {data.temperature},
+                                        Energy: {data.usageEnergy}
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            "No data for sensor"
+                        )}
                         <button onClick={() => {
                             setSelectedSensor(sensor);
-                            setOriginalSensor(sensor)
+                            setOriginalSensor(sensor);
                         }}>Edit
                         </button>
                         <button onClick={() => handleDeleteSensor(sensor.name)}>Delete</button>
-                    </li>
-                ))}
-            </ul>
-
-            <h2>All Sensors data</h2>
-            <ul>
-                {sensorsData.map((sensorData) => (
-                    <li key={sensorData.name}>
-                        <strong>{sensorData.name}</strong> - Assigned to Device: {sensorData.deviceName || "N/A"}
                     </li>
                 ))}
             </ul>
