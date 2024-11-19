@@ -2,8 +2,8 @@ import '../style.css';
 import '../form.css';
 
 import AuthService from "../service/AuthService";
-import {useEffect, useState} from "react";
-import {useNavigate} from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import * as React from "react";
 import DeviceService from "../service/DeviceService";
 import SensorService from "../service/SensorService";
@@ -11,11 +11,10 @@ import SensorService from "../service/SensorService";
 function DevicesPage() {
     const navigate = useNavigate();
     const [devices, setDevices] = useState([]);
-    const [newDevice, setNewDevice] = useState({name: "", location: ""});
-    const [sensorData, setSensorData] = useState({name: "", sensorName: ""});
-    const [selectedDevice, setSelectedDevice] = useState(null);
     const [sensors, setSensors] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [expandedDevice, setExpandedDevice] = useState(null); // State to track expanded device
+    const [newDevice, setNewDevice] = useState({ name: "", location: "" });
+    const [sensorData, setSensorData] = useState({ name: "", sensorName: "" }); // Tracks the selected sensor for a device
 
     useEffect(() => {
         if (AuthService.getUserInfo().username === null) {
@@ -30,7 +29,6 @@ function DevicesPage() {
             const response = await DeviceService.getDevices();
             setDevices(response.data);
         } catch (error) {
-            console.error("Error loading devices:", error);
             console.error("Error loading devices:", error);
         }
     };
@@ -47,61 +45,49 @@ function DevicesPage() {
     const handleCreateDevice = async () => {
         try {
             await DeviceService.createDevice(newDevice);
-            setNewDevice({name: "", location: ""});
+            setNewDevice({ name: "", location: "" });
             loadDevices();
         } catch (error) {
             console.error("Error creating device:", error);
         }
     };
 
-    const handleAddSensor = async () => {
+    const handleAddSensorToDevice = async () => {
         try {
             await DeviceService.addSensorToDevice(sensorData);
-            setSensorData({name: "", sensorName: ""});
+            setSensorData({ name: "", sensorName: "" });
             loadDevices();
         } catch (error) {
-            alert(error.response.data);
+            alert(error.response.data || "Error adding sensor to device");
         }
     };
 
-    const handleRemoveSensor = async () => {
+    const handleRemoveSensorFromDevice = async (sensorName, deviceName) => {
         try {
-            await DeviceService.removeSensorFromDevice(sensorData);
-            setSensorData({name: "", sensorName: ""});
+            await DeviceService.removeSensorFromDevice({ name: deviceName, sensorName });
             loadDevices();
         } catch (error) {
-            alert(error.response.data);
-        }
-    };
-
-    const handleUpdateDevice = async () => {
-        try {
-            await DeviceService.updateDevice(selectedDevice);
-            setSelectedDevice(null);
-            setIsModalOpen(false); // Zavřít modal
-            loadDevices();
-        } catch (error) {
-            console.error("Error updating device:", error);
+            alert(error.response.data || "Error removing sensor from device");
         }
     };
 
     const handleDeleteDevice = async (deviceName) => {
-        try {
-            await DeviceService.deleteDevice(deviceName);
-            loadDevices();
-        } catch (error) {
-            console.error("Error deleting device:", error);
+        if (window.confirm(`Do you really want to delete the device ${deviceName}?`)) {
+            try {
+                await DeviceService.deleteDevice(deviceName);
+                loadDevices();
+            } catch (error) {
+                console.error("Error deleting device:", error);
+            }
         }
     };
 
-    const openEditModal = (device) => {
-        setSelectedDevice(device);
-        setIsModalOpen(true); // Otevřít modal
-    };
-
-    const closeModal = () => {
-        setSelectedDevice(null);
-        setIsModalOpen(false); // Zavřít modal
+    const toggleExpandedDevice = (deviceName) => {
+        if (expandedDevice === deviceName) {
+            setExpandedDevice(null); // Collapse if already expanded
+        } else {
+            setExpandedDevice(deviceName); // Expand the selected device
+        }
     };
 
     return (
@@ -109,13 +95,139 @@ function DevicesPage() {
             <h1>Device Manager</h1>
 
             <h2>All Devices</h2>
-            <ul>
+            <ul style={{ listStyle: "none", padding: 0 }}>
                 {devices.map((device) => (
-                    <li key={device.name}>
-                        Device name: {device.name} - Location: {device.location} - Sensors:{" "}
-                        {device.sensorsName && device.sensorsName.length > 0 ? device.sensorsName.join(", ") : "No sensors assigned"}
-                        <button onClick={() => openEditModal(device)}>Edit</button>
-                        <button onClick={() => handleDeleteDevice(device.name)}>Delete</button>
+                    <li
+                        key={device.name}
+                        style={{
+                            marginBottom: "10px",
+                            border: "1px solid #ddd",
+                            borderRadius: "5px",
+                            padding: "10px",
+                        }}
+                    >
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                cursor: "pointer",
+                            }}
+                            onClick={() => toggleExpandedDevice(device.name)}
+                        >
+                            <div>
+                                <strong>Device Name:</strong> {device.name} -{" "}
+                                <strong>Location:</strong> {device.location}
+                            </div>
+                            <div>
+                                <button
+                                    style={{
+                                        marginLeft: "10px",
+                                        padding: "5px 10px",
+                                        cursor: "pointer",
+                                        backgroundColor: "#dc3545",
+                                        color: "#fff",
+                                        border: "none",
+                                        borderRadius: "5px",
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Prevent triggering the expand toggle
+                                        handleDeleteDevice(device.name);
+                                    }}
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                        {expandedDevice === device.name && (
+                            <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "#f9f9f9" }}>
+                                <h4>Sensors:</h4>
+                                {device.sensorsName && device.sensorsName.length > 0 ? (
+                                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                                        <thead>
+                                        <tr>
+                                            <th style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>
+                                                Sensor Name
+                                            </th>
+                                            <th style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>
+                                                Actions
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {device.sensorsName.map((sensor, index) => (
+                                            <tr key={index}>
+                                                <td
+                                                    style={{
+                                                        borderBottom: "1px solid #ddd",
+                                                        padding: "8px",
+                                                    }}
+                                                >
+                                                    {sensor}
+                                                </td>
+                                                <td
+                                                    style={{
+                                                        borderBottom: "1px solid #ddd",
+                                                        padding: "8px",
+                                                    }}
+                                                >
+                                                    <button
+                                                        style={{
+                                                            padding: "5px 10px",
+                                                            cursor: "pointer",
+                                                            backgroundColor: "#dc3545",
+                                                            color: "#fff",
+                                                            border: "none",
+                                                            borderRadius: "5px",
+                                                        }}
+                                                        onClick={() => handleRemoveSensorFromDevice(sensor, device.name)}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                ) : (
+                                    <p>No sensors assigned to this device.</p>
+                                )}
+                                <h4>Add Sensor:</h4>
+                                <select
+                                    value={sensorData.sensorName}
+                                    onChange={(e) =>
+                                        setSensorData({ name: device.name, sensorName: e.target.value })
+                                    }
+                                    style={{
+                                        width: "100%",
+                                        padding: "5px",
+                                        marginBottom: "10px",
+                                        borderRadius: "5px",
+                                        border: "1px solid #ddd",
+                                    }}
+                                >
+                                    <option value="">Select Sensor</option>
+                                    {sensors.map((sensor) => (
+                                        <option key={sensor.name} value={sensor.name}>
+                                            {sensor.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <button
+                                    style={{
+                                        padding: "5px 10px",
+                                        cursor: "pointer",
+                                        backgroundColor: "#007bff",
+                                        color: "#fff",
+                                        border: "none",
+                                        borderRadius: "5px",
+                                    }}
+                                    onClick={handleAddSensorToDevice}
+                                >
+                                    Add Sensor
+                                </button>
+                            </div>
+                        )}
                     </li>
                 ))}
             </ul>
@@ -125,65 +237,15 @@ function DevicesPage() {
                 type="text"
                 placeholder="Device Name"
                 value={newDevice.name}
-                onChange={(e) => setNewDevice({...newDevice, name: e.target.value})}
+                onChange={(e) => setNewDevice({ ...newDevice, name: e.target.value })}
             />
             <input
                 type="text"
                 placeholder="Device Location"
                 value={newDevice.location}
-                onChange={(e) => setNewDevice({...newDevice, location: e.target.value})}
+                onChange={(e) => setNewDevice({ ...newDevice, location: e.target.value })}
             />
             <button onClick={handleCreateDevice}>Create Device</button>
-
-            <h2>Add Sensor to Device</h2>
-            <select
-                value={sensorData.name}
-                onChange={(e) => setSensorData({...sensorData, name: e.target.value})}
-            >
-                <option value="">Select device</option>
-                {devices.map((device) => (
-                    <option key={device.name} value={device.name}>
-                        {device.name}
-                    </option>
-                ))}
-            </select>
-
-            <select
-                value={sensorData.sensorName}
-                onChange={(e) => setSensorData({...sensorData, sensorName: e.target.value})}
-            >
-                <option value="">Select sensor</option>
-                {sensors.map((sensor) => (
-                    <option key={sensor.name} value={sensor.name}>
-                        {sensor.name}
-                    </option>
-                ))}
-            </select>
-            <button onClick={handleAddSensor}>Add Sensor</button>
-            <button onClick={handleRemoveSensor}>Remove Sensor</button>
-
-            {/* Modal pro editaci zařízení */}
-            {isModalOpen && (
-                <div className="modal">
-                    <div className="modal-content">
-                        <h2>Edit Device</h2>
-                        <input
-                            type="text"
-                            placeholder="Device Name"
-                            value={selectedDevice.name}
-                            onChange={(e) => setSelectedDevice({...selectedDevice, name: e.target.value})}
-                        />
-                        <input
-                            type="text"
-                            placeholder="Device Location"
-                            value={selectedDevice.location}
-                            onChange={(e) => setSelectedDevice({...selectedDevice, location: e.target.value})}
-                        />
-                        <button onClick={handleUpdateDevice}>Save Changes</button>
-                        <button onClick={closeModal}>Cancel</button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

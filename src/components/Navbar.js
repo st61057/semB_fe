@@ -14,8 +14,6 @@ function Navbar({loggedIn}) {
 
                             <li className="nav-item"><Link className="nav-link" to="/sensors">Sensors</Link></li><li/>
 
-                            <li className="nav-item"><Link className="nav-link" to="/sensorsData">Sensors data</Link></li><li/>
-
                             <li className="nav-item"><Link className="nav-link" to="/users">Users</Link></li><li/>
                         </>
                         :
