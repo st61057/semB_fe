@@ -6,8 +6,11 @@ const BASE_URL = process.env.REACT_APP_TARGET_DOMAIN + '/api/';
 class UserService {
 
     getUserInfo() {
-        console.log(BASE_URL + "user-info")
         return axios.get(BASE_URL + "user-info", AuthService.getAuthHeader());
+    }
+
+    getUsers() {
+        return axios.get(BASE_URL + 'all-users', AuthService.getAuthHeader());
     }
 
     addDeviceToUser(userDeviceDto) {

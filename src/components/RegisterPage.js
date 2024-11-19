@@ -1,6 +1,8 @@
 import React, {useState} from "react";
 import AuthService from "../service/AuthService";
 import {useNavigate} from "react-router-dom";
+import "../Style.css";
+import "../form.css";
 
 function Register() {
 

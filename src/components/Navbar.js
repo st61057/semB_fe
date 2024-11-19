@@ -1,6 +1,6 @@
-import '../style.css'
+import '../Style.css'
+import "../form.css";
 import {HashLink as Link} from 'react-router-hash-link';
-import AuthService from "../service/AuthService";
 
 function Navbar({loggedIn}) {
 
@@ -10,11 +10,10 @@ function Navbar({loggedIn}) {
                 <ul className="navbar-nav mr-auto">
                     {loggedIn ?
                         <>
-                            <li className="nav-item"><Link className="nav-link" to="/devices">Devices</Link></li><li/>
-
-                            <li className="nav-item"><Link className="nav-link" to="/sensors">Sensors</Link></li><li/>
-
-                            <li className="nav-item"><Link className="nav-link" to="/users">Users</Link></li><li/>
+                            <li className="nav-item"><Link className="nav-link" to="/devices">Devices</Link></li>
+                            <li className="nav-item"><Link className="nav-link" to="/sensors">Sensors</Link></li>
+                            <li className="nav-item"><Link className="nav-link" to="/users">Users</Link></li>
+                            <li className="nav-item"><Link className="nav-link" to="/dashboard">Kibana dashboard</Link></li>
                         </>
                         :
                         <></>

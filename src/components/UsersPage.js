@@ -2,27 +2,40 @@ import React, {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import UserService from "../service/UserService";
 import AuthService from "../service/AuthService";
+import "../Style.css";
+import "../form.css";
 
 function UsersPage() {
     const navigate = useNavigate();
 
-    // Stavy pro správu dat
     const [user, setUser] = useState(null);
+    const [users, setUsers] = useState([]);
     const [userDevices, setUserDevices] = useState([]);
     const [newDevice, setNewDevice] = useState({username: "", deviceName: ""});
     const [updateUserDto, setUpdateUserDto] = useState({loggedUsername: "", username: "", email: ""});
     const [passwordData, setPasswordData] = useState({oldPassword: "", newPassword: ""});
+    const [registerData, setRegisterData] = useState({username: "", password: "", email: "",});
 
-    // Načítání dat při načtení komponenty
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+
     useEffect(() => {
         if (AuthService.getUserInfo().username === null) {
             navigate("/");
         } else {
             loadUserInfo();
+            loadUsers();
         }
-    });
+    }, []);
 
-    // Načte informace o uživateli
+    const handleRegister = async () => {
+        try {
+            const response = await AuthService.register(registerData);
+        } catch (error) {
+            alert("Adding user: " + error.response?.data || error.message);
+        }
+    };
+
     const loadUserInfo = async () => {
         try {
             const response = await UserService.getUserInfo();
@@ -33,11 +46,18 @@ function UsersPage() {
         }
     };
 
-    // Přidá zařízení uživateli
+    const loadUsers = async () => {
+        try {
+            const response = await UserService.getUsers();
+            setUsers(response.data);
+        } catch (error) {
+            console.error("Error loading users:", error);
+        }
+    };
+
     const handleAddDevice = async () => {
         try {
-            const response = await UserService.addDeviceToUser(newDevice); // Volání API
-            console.log("Response from addDeviceToUser:", response.data); // Log odpovědi
+            const response = await UserService.addDeviceToUser(newDevice);
             setUser(response.data);
             setUserDevices(response.data.devices || []);
             setNewDevice({deviceName: ""});
@@ -47,9 +67,7 @@ function UsersPage() {
         }
     };
 
-    // Odebere zařízení od uživatele
     const handleRemoveDevice = async (username, deviceName) => {
-        console.log(username, deviceName);
         try {
             const response = await UserService.removeDeviceFromUser({username, deviceName});
             setUser(response.data);
@@ -60,21 +78,38 @@ function UsersPage() {
         }
     };
 
-    // Aktualizuje informace o uživateli
-    const handleUpdateUser = async () => {
+    const handleUpdateCurrentUser = async () => {
         try {
             updateUserDto.loggedUsername = user.username;
-            const response = await UserService.updateUser(updateUserDto);
+
+            const updatedUsername = updateUserDto.username || user.username;
+            const updatedEmail = updateUserDto.email || user.email;
+
+            if (updatedUsername === user.username && updatedEmail === user.email) {
+                alert("No changes were made to the user information.");
+                return;
+            }
+
+            const updatePayload = {
+                loggedUsername: updateUserDto.loggedUsername,
+                username: updatedUsername,
+                email: updatedEmail,
+            };
+
+            console.log(updatePayload);
+
+            const response = await UserService.updateUser(updatePayload);
+
             setUser(response.data);
             setUpdateUserDto({username: "", email: ""});
             alert("User information updated successfully.");
         } catch (error) {
-            console.error("Error updating user info:", error);
+            console.error(error.response?.data || error.message);
             alert(error.response?.data || "Failed to update user info.");
         }
     };
 
-    // Změní heslo uživatele
+
     const handleChangePassword = async () => {
         try {
             await UserService.changePassword(passwordData);
@@ -86,8 +121,7 @@ function UsersPage() {
         }
     };
 
-    // Smaže uživatele
-    const handleDeleteUser = async () => {
+    const handleDeleteCurrentUser = async () => {
         if (window.confirm("Are you sure you want to delete your account?")) {
             try {
                 await UserService.deleteUser(user.username);
@@ -100,72 +134,236 @@ function UsersPage() {
         }
     };
 
+    const handleEditUser = (user) => {
+        setSelectedUser(user);
+        setModalOpen(true);
+    };
+
+    const handleUpdateUser = async () => {
+        try {
+            const updateUserRequest = {
+                loggedUsername: user.username,
+                username: selectedUser.username,
+                email: selectedUser.email,
+            };
+
+            console.log(updateUserRequest);
+
+            const response = await UserService.updateUser(updateUserRequest);
+
+            alert("User updated successfully!");
+            setModalOpen(false);
+            loadUsers();
+        } catch (error) {
+            console.error("Error updating user:", error);
+            alert(error.response?.data || "Failed to update user.");
+        }
+    };
+
+    const handleDeleteUser = async (username) => {
+        if (window.confirm(`Are you sure you want to delete the user ${username}?`)) {
+            try {
+                await UserService.deleteUser(username);
+                alert("User deleted successfully!");
+                loadUsers();
+            } catch (error) {
+                console.error("Error deleting user:", error);
+                alert(error.response?.data || "Failed to delete user.");
+            }
+        }
+    };
+
     return (
-        <div>
-            <h1>User Management</h1>
+        <div className="users-page">
+            <h1 className="page-title">User Management</h1>
 
             {user && (
-                <div>
+                <section className="user-info">
                     <h2>Current User Information</h2>
-                    <p><strong>Username:</strong> {user.username}</p>
-                    <p><strong>Email:</strong> {user.email}</p>
-                </div>
+                    <p>
+                        <strong>Username:</strong> {user.username}
+                    </p>
+                    <p>
+                        <strong>Email:</strong> {user.email}
+                    </p>
+                </section>
             )}
 
-            <h2>User Devices</h2>
-            <ul>
-                {userDevices.map((device) => (
-                    <li key={device.name}>
-                        <strong>{device.name}</strong>
-                        <button onClick={() => handleRemoveDevice(user.username, device.name)}>Remove</button>
-                    </li>
-                ))}
-            </ul>
+            <section className="user-devices">
+                <h2>User Devices</h2>
+                {userDevices.length > 0 ? (
+                    <ul className="device-list">
+                        {userDevices.map((device) => (
+                            <li key={device.name} className="device-item">
+                                <span>{device.name}</span>
+                                <button
+                                    className="remove-button"
+                                    onClick={() => handleRemoveDevice(user.username, device.name)}
+                                >
+                                    Remove
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p>No devices assigned.</p>
+                )}
+            </section>
 
-            <h2>Add Device</h2>
-            <input
-                type="text"
-                placeholder="Device Name"
-                value={newDevice.deviceName}
-                onChange={(e) => setNewDevice({username: user.username, deviceName: e.target.value})}
-            />
-            <button onClick={handleAddDevice}>Add Device</button>
+            <section className="add-device">
+                <h2>Add Device</h2>
+                <div className="form-group">
+                    <input
+                        type="text"
+                        placeholder="Device Name"
+                        value={newDevice.deviceName}
+                        onChange={(e) =>
+                            setNewDevice({username: user.username, deviceName: e.target.value})
+                        }
+                    />
+                    <button onClick={handleAddDevice} className="add-button">
+                        Add Device
+                    </button>
+                </div>
+            </section>
 
-            <h2>Update User Information</h2>
-            <input
-                type="text"
-                placeholder="New Username"
-                value={updateUserDto.username}
-                onChange={(e) => setUpdateUserDto({...updateUserDto, username: e.target.value})}/>
-            <input
-                type="email"
-                placeholder="New Email"
-                value={updateUserDto.email}
-                onChange={(e) => setUpdateUserDto({...updateUserDto, email: e.target.value})}/>
-            <button onClick={handleUpdateUser}>Update User Info</button>
+            <section>
+                <div>
+                    <h2>Add user</h2>
+                    <input
+                        type="text"
+                        placeholder="Username"
+                        value={registerData.username}
+                        onChange={(e) => setRegisterData({...registerData, username: e.target.value})}
+                    />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={registerData.password}
+                        onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+                    />
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        value={registerData.email}
+                        onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
+                    />
+                    <button onClick={handleRegister}>Create user</button>
+                </div>
+            </section>
 
-            <h2>Change Password</h2>
-            <input
-                type="password"
-                placeholder="Old Password"
-                value={passwordData.oldPassword}
-                onChange={(e) => setPasswordData({...passwordData, oldPassword: e.target.value})}
-            />
-            <input
-                type="password"
-                placeholder="New Password"
-                value={passwordData.newPassword}
-                onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-            />
-            <button onClick={handleChangePassword}>Change Password</button>
+            <section className="update-user">
+                <h2>Update Current User Information</h2>
+                <div className="form-group">
+                    <input
+                        type="text"
+                        placeholder="New Username"
+                        value={updateUserDto.username}
+                        onChange={(e) =>
+                            setUpdateUserDto({...updateUserDto, username: e.target.value})
+                        }
+                    />
+                    <input
+                        type="email"
+                        placeholder="New Email"
+                        value={updateUserDto.email}
+                        onChange={(e) =>
+                            setUpdateUserDto({...updateUserDto, email: e.target.value})
+                        }
+                    />
+                    <button onClick={handleUpdateCurrentUser} className="update-button">
+                        Update Info
+                    </button>
+                </div>
+            </section>
 
-            <h2>Delete Account</h2>
-            <button onClick={handleDeleteUser} style={{color: "red"}}>
-                Delete My Account
-            </button>
+            <section className="all-users">
+                <h2>All Users</h2>
+                {users && users.length > 0 ? (
+                    <ul className="user-list">
+                        {users.map((u) => (
+                            <li key={u.username} className="user-item">
+                                <div>
+                                    <strong>{u.username}</strong> - {u.email}
+                                </div>
+                                <div className="actions">
+                                    <button
+                                        className="edit-button"
+                                        onClick={() => handleEditUser(u)}
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        className="delete-button"
+                                        onClick={() => handleDeleteUser(u.username)}
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p>No users available.</p>
+                )}
+            </section>
+
+            <section className="delete-account">
+                <h2>Delete Current Account</h2>
+                <button onClick={handleDeleteCurrentUser} className="delete-button">
+                    Delete My Account
+                </button>
+            </section>
+
+            {modalOpen && (
+                <div className="modal">
+                    <div className="modal-content">
+                        <h2>Edit User</h2>
+                        <div className="form-group">
+                            <label>Username</label>
+                            <input
+                                type="text"
+                                value={selectedUser.username}
+                                onChange={(e) =>
+                                    setSelectedUser({
+                                        ...selectedUser,
+                                        username: e.target.value,
+                                    })
+                                }
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                value={selectedUser.email}
+                                onChange={(e) =>
+                                    setSelectedUser({
+                                        ...selectedUser,
+                                        email: e.target.value,
+                                    })
+                                }
+                            />
+                        </div>
+                        <div className="modal-actions">
+                            <button
+                                className="save-button"
+                                onClick={handleUpdateUser}
+                            >
+                                Save Changes
+                            </button>
+                            <button
+                                className="cancel-button"
+                                onClick={() => setModalOpen(false)}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
 export default UsersPage;
-

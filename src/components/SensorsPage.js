@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import SensorService from "../service/SensorService";
+import "../Style.css";
+import "../form.css";
 
 const SensorsPage = () => {
     const [sensors, setSensors] = useState([]);

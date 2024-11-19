@@ -1,5 +1,8 @@
 import React, {useState} from "react";
 import AuthService from "../service/AuthService";
+import "../Style.css";
+import "../form.css";
+import {useNavigate} from "react-router-dom";
 
 const ChangePasswordPage = () => {
 
@@ -7,11 +10,14 @@ const ChangePasswordPage = () => {
         resetCode: "",
         newPassword: "",
     });
+    const navigate = useNavigate();
+
 
     const handleChangePassword = async () => {
         try {
             const response = await AuthService.changePassword(changePasswordData);
             alert("Password changed successfully for user: " + response.data.username);
+            navigate('/')
         } catch (error) {
             alert("Change password failed: " + error.response?.data || error.message);
         }

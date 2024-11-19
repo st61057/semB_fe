@@ -1,9 +1,9 @@
-import '../style.css';
+import '../Style.css';
 import '../form.css';
 
 import AuthService from "../service/AuthService";
-import { useEffect, useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import {useEffect, useState} from "react";
+import {useNavigate} from 'react-router-dom';
 import * as React from "react";
 import DeviceService from "../service/DeviceService";
 import SensorService from "../service/SensorService";
@@ -13,8 +13,8 @@ function DevicesPage() {
     const [devices, setDevices] = useState([]);
     const [sensors, setSensors] = useState([]);
     const [expandedDevice, setExpandedDevice] = useState(null); // State to track expanded device
-    const [newDevice, setNewDevice] = useState({ name: "", location: "" });
-    const [sensorData, setSensorData] = useState({ name: "", sensorName: "" }); // Tracks the selected sensor for a device
+    const [newDevice, setNewDevice] = useState({name: "", location: ""});
+    const [sensorData, setSensorData] = useState({name: "", sensorName: ""}); // Tracks the selected sensor for a device
 
     useEffect(() => {
         if (AuthService.getUserInfo().username === null) {
@@ -45,7 +45,7 @@ function DevicesPage() {
     const handleCreateDevice = async () => {
         try {
             await DeviceService.createDevice(newDevice);
-            setNewDevice({ name: "", location: "" });
+            setNewDevice({name: "", location: ""});
             loadDevices();
         } catch (error) {
             console.error("Error creating device:", error);
@@ -55,7 +55,7 @@ function DevicesPage() {
     const handleAddSensorToDevice = async () => {
         try {
             await DeviceService.addSensorToDevice(sensorData);
-            setSensorData({ name: "", sensorName: "" });
+            setSensorData({name: "", sensorName: ""});
             loadDevices();
         } catch (error) {
             alert(error.response.data || "Error adding sensor to device");
@@ -64,7 +64,7 @@ function DevicesPage() {
 
     const handleRemoveSensorFromDevice = async (sensorName, deviceName) => {
         try {
-            await DeviceService.removeSensorFromDevice({ name: deviceName, sensorName });
+            await DeviceService.removeSensorFromDevice({name: deviceName, sensorName});
             loadDevices();
         } catch (error) {
             alert(error.response.data || "Error removing sensor from device");
@@ -95,24 +95,12 @@ function DevicesPage() {
             <h1>Device Manager</h1>
 
             <h2>All Devices</h2>
-            <ul style={{ listStyle: "none", padding: 0 }}>
+            <ul>
                 {devices.map((device) => (
                     <li
                         key={device.name}
-                        style={{
-                            marginBottom: "10px",
-                            border: "1px solid #ddd",
-                            borderRadius: "5px",
-                            padding: "10px",
-                        }}
                     >
                         <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                cursor: "pointer",
-                            }}
                             onClick={() => toggleExpandedDevice(device.name)}
                         >
                             <div>
@@ -121,15 +109,6 @@ function DevicesPage() {
                             </div>
                             <div>
                                 <button
-                                    style={{
-                                        marginLeft: "10px",
-                                        padding: "5px 10px",
-                                        cursor: "pointer",
-                                        backgroundColor: "#dc3545",
-                                        color: "#fff",
-                                        border: "none",
-                                        borderRadius: "5px",
-                                    }}
                                     onClick={(e) => {
                                         e.stopPropagation(); // Prevent triggering the expand toggle
                                         handleDeleteDevice(device.name);
@@ -140,16 +119,16 @@ function DevicesPage() {
                             </div>
                         </div>
                         {expandedDevice === device.name && (
-                            <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "#f9f9f9" }}>
+                            <div>
                                 <h4>Sensors:</h4>
                                 {device.sensorsName && device.sensorsName.length > 0 ? (
-                                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                                    <table>
                                         <thead>
                                         <tr>
-                                            <th style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>
+                                            <th>
                                                 Sensor Name
                                             </th>
-                                            <th style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>
+                                            <th>
                                                 Actions
                                             </th>
                                         </tr>
@@ -158,28 +137,12 @@ function DevicesPage() {
                                         {device.sensorsName.map((sensor, index) => (
                                             <tr key={index}>
                                                 <td
-                                                    style={{
-                                                        borderBottom: "1px solid #ddd",
-                                                        padding: "8px",
-                                                    }}
                                                 >
                                                     {sensor}
                                                 </td>
                                                 <td
-                                                    style={{
-                                                        borderBottom: "1px solid #ddd",
-                                                        padding: "8px",
-                                                    }}
                                                 >
                                                     <button
-                                                        style={{
-                                                            padding: "5px 10px",
-                                                            cursor: "pointer",
-                                                            backgroundColor: "#dc3545",
-                                                            color: "#fff",
-                                                            border: "none",
-                                                            borderRadius: "5px",
-                                                        }}
                                                         onClick={() => handleRemoveSensorFromDevice(sensor, device.name)}
                                                     >
                                                         Remove
@@ -196,15 +159,8 @@ function DevicesPage() {
                                 <select
                                     value={sensorData.sensorName}
                                     onChange={(e) =>
-                                        setSensorData({ name: device.name, sensorName: e.target.value })
+                                        setSensorData({name: device.name, sensorName: e.target.value})
                                     }
-                                    style={{
-                                        width: "100%",
-                                        padding: "5px",
-                                        marginBottom: "10px",
-                                        borderRadius: "5px",
-                                        border: "1px solid #ddd",
-                                    }}
                                 >
                                     <option value="">Select Sensor</option>
                                     {sensors.map((sensor) => (
@@ -214,14 +170,6 @@ function DevicesPage() {
                                     ))}
                                 </select>
                                 <button
-                                    style={{
-                                        padding: "5px 10px",
-                                        cursor: "pointer",
-                                        backgroundColor: "#007bff",
-                                        color: "#fff",
-                                        border: "none",
-                                        borderRadius: "5px",
-                                    }}
                                     onClick={handleAddSensorToDevice}
                                 >
                                     Add Sensor
@@ -237,13 +185,13 @@ function DevicesPage() {
                 type="text"
                 placeholder="Device Name"
                 value={newDevice.name}
-                onChange={(e) => setNewDevice({ ...newDevice, name: e.target.value })}
+                onChange={(e) => setNewDevice({...newDevice, name: e.target.value})}
             />
             <input
                 type="text"
                 placeholder="Device Location"
                 value={newDevice.location}
-                onChange={(e) => setNewDevice({ ...newDevice, location: e.target.value })}
+                onChange={(e) => setNewDevice({...newDevice, location: e.target.value})}
             />
             <button onClick={handleCreateDevice}>Create Device</button>
         </div>
