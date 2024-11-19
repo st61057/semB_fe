@@ -1,13 +1,16 @@
 import React, {useEffect, useState} from "react";
 import SensorService from "../service/SensorService";
-import SensorDataService from "../service/SensorDataService";
 
 const SensorsPage = () => {
     const [sensors, setSensors] = useState([]);
     const [newSensor, setNewSensor] = useState({name: "", deviceName: ""});
+    const [newSensorData, setNewSensorData] = useState({
+        dataMeasuredTime: "",
+        temperature: "", usageEnergy: "", sensor: ""
+    });
     const [selectedSensor, setSelectedSensor] = useState(null);
     const [originalSensor, setOriginalSensor] = useState(null);
-    const [sensorData, setSensorData] = useState([]);
+    const [sensorsData, setSensorsData] = useState([]);
 
     useEffect(() => {
         loadSensors();
@@ -60,39 +63,19 @@ const SensorsPage = () => {
 
     const fetchSensorDataByName = async (sensorName) => {
         try {
-            const response = await SensorDataService.getSensorDataByName(sensorName);
-            setSensorData(response.data);
+            const response = await SensorService.getSensorDataByName(sensorName);
+            setSensorsData(response.data);
         } catch (e) {
             alert(`Error fetching sensor data for "${sensorName}": ${e.message}`);
         }
     };
 
-    const handleAddSensorData = async (e) => {
+    const handleAddSensorData = async (e, newSensorData) => {
         e.preventDefault();
         try {
-            await SensorDataService.addSensorData(newSensorData);
-            setNewSensorData({temperature: '', usageEnergy: '', sensor: {id: ''}});
+            await SensorService.addSensorData(newSensorData);
         } catch (e) {
             alert(`Error adding sensor data: ${e.message}`);
-        }
-    };
-
-    //
-    // const handleCreateSensor = async () => {
-    //     try {
-    //         await SensorService.createSensor(newSensor);
-    //         setNewSensor({name: "", deviceName: ""});
-    //         loadSensors();
-    //     } catch (error) {
-    //         console.error("Error creating sensor:", error);
-    //     }
-    // };
-
-    const handleDeleteSensorData = async (id) => {
-        try {
-            await SensorDataService.deleteSensorData(id);
-        } catch (e) {
-            alert(`Error deleting sensor data: ${e.message}`);
         }
     };
 
@@ -111,6 +94,15 @@ const SensorsPage = () => {
                         }}>Edit
                         </button>
                         <button onClick={() => handleDeleteSensor(sensor.name)}>Delete</button>
+                    </li>
+                ))}
+            </ul>
+
+            <h2>All Sensors data</h2>
+            <ul>
+                {sensorsData.map((sensorData) => (
+                    <li key={sensorData.name}>
+                        <strong>{sensorData.name}</strong> - Assigned to Device: {sensorData.deviceName || "N/A"}
                     </li>
                 ))}
             </ul>

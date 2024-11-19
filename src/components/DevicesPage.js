@@ -1,19 +1,21 @@
-// import './style.css';
+import '../style.css';
+import '../form.css';
+
 import AuthService from "../service/AuthService";
 import {useEffect, useState} from "react";
-import {Link, useNavigate} from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import * as React from "react";
 import DeviceService from "../service/DeviceService";
 import SensorService from "../service/SensorService";
 
 function DevicesPage() {
-
     const navigate = useNavigate();
     const [devices, setDevices] = useState([]);
     const [newDevice, setNewDevice] = useState({name: "", location: ""});
     const [sensorData, setSensorData] = useState({name: "", sensorName: ""});
     const [selectedDevice, setSelectedDevice] = useState(null);
     const [sensors, setSensors] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false); // Stav modalu
 
     useEffect(() => {
         if (AuthService.getUserInfo().username === null) {
@@ -77,6 +79,7 @@ function DevicesPage() {
         try {
             await DeviceService.updateDevice(selectedDevice);
             setSelectedDevice(null);
+            setIsModalOpen(false); // Zavřít modal
             loadDevices();
         } catch (error) {
             console.error("Error updating device:", error);
@@ -92,6 +95,16 @@ function DevicesPage() {
         }
     };
 
+    const openEditModal = (device) => {
+        setSelectedDevice(device);
+        setIsModalOpen(true); // Otevřít modal
+    };
+
+    const closeModal = () => {
+        setSelectedDevice(null);
+        setIsModalOpen(false); // Zavřít modal
+    };
+
     return (
         <div>
             <h1>Device Manager</h1>
@@ -100,9 +113,9 @@ function DevicesPage() {
             <ul>
                 {devices.map((device) => (
                     <li key={device.name}>
-                        Device name: {device.name} - Location: - {device.location} - Sensors:{" "}
+                        Device name: {device.name} - Location: {device.location} - Sensors:{" "}
                         {device.sensorsName && device.sensorsName.length > 0 ? device.sensorsName.join(", ") : "No sensors assigned"}
-                        <button onClick={() => setSelectedDevice(device)}>Edit</button>
+                        <button onClick={() => openEditModal(device)}>Edit</button>
                         <button onClick={() => handleDeleteDevice(device.name)}>Delete</button>
                     </li>
                 ))}
@@ -126,10 +139,7 @@ function DevicesPage() {
             <h2>Add Sensor to Device</h2>
             <select
                 value={sensorData.name}
-                onChange={(e) => setSensorData({
-                    ...sensorData,
-                    name: e.target.value
-                })} // Aktualizace stavu při změně
+                onChange={(e) => setSensorData({...sensorData, name: e.target.value})}
             >
                 <option value="">Select device</option>
                 {devices.map((device) => (
@@ -140,11 +150,8 @@ function DevicesPage() {
             </select>
 
             <select
-                value={sensorData.sensorName} // Hodnota vybraného senzoru
-                onChange={(e) => setSensorData({
-                    ...sensorData,
-                    sensorName: e.target.value
-                })} // Aktualizace stavu při změně
+                value={sensorData.sensorName}
+                onChange={(e) => setSensorData({...sensorData, sensorName: e.target.value})}
             >
                 <option value="">Select a sensor</option>
                 {sensors.map((sensor) => (
@@ -156,26 +163,30 @@ function DevicesPage() {
             <button onClick={handleAddSensor}>Add Sensor</button>
             <button onClick={handleRemoveSensor}>Remove Sensor</button>
 
-            {selectedDevice && (
-                <div>
-                    <h2>Edit Device</h2>
-                    <input
-                        type="text"
-                        placeholder="Device Name"
-                        value={selectedDevice.name}
-                        onChange={(e) => setSelectedDevice({...selectedDevice, name: e.target.value})}
-                    />
-                    <input
-                        type="text"
-                        placeholder="Device Location"
-                        value={selectedDevice.location}
-                        onChange={(e) => setSelectedDevice({...selectedDevice, location: e.target.value})}
-                    />
-                    <button onClick={handleUpdateDevice}>Update Device</button>
+            {/* Modal pro editaci zařízení */}
+            {isModalOpen && (
+                <div className="modal">
+                    <div className="modal-content">
+                        <h2>Edit Device</h2>
+                        <input
+                            type="text"
+                            placeholder="Device Name"
+                            value={selectedDevice.name}
+                            onChange={(e) => setSelectedDevice({...selectedDevice, name: e.target.value})}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Device Location"
+                            value={selectedDevice.location}
+                            onChange={(e) => setSelectedDevice({...selectedDevice, location: e.target.value})}
+                        />
+                        <button onClick={handleUpdateDevice}>Save Changes</button>
+                        <button onClick={closeModal}>Cancel</button>
+                    </div>
                 </div>
             )}
         </div>
     );
-};
+}
 
 export default DevicesPage;

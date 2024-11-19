@@ -1,12 +1,9 @@
-// import './style.css'
+import '../style.css'
 import {HashLink as Link} from 'react-router-hash-link';
 import AuthService from "../service/AuthService";
 
 function Navbar({loggedIn}) {
-    // {
-    //     console.log(loggedIn);
-    //     console.log(AuthService.getUserInfo())
-    // }
+
     return (
         <nav className="navbar bg-light">
             <div className="collapse navbar-collapse" id="navbarSupportedContent">
@@ -29,7 +26,6 @@ function Navbar({loggedIn}) {
 
             {loggedIn ?
                 <ul className="nav navbar-nav navbar-right">
-                    <li className="nav-item"><Link className="nav-link" to="/login">Login</Link></li>
                     <li className="nav-item"><Link className="nav-link" to="/logout">Logout</Link></li>
                 </ul>
                 :
