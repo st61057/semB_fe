@@ -32,7 +32,7 @@ const SensorsPage = () => {
             setNewSensor({name: "", deviceName: ""});
             loadSensors();
         } catch (error) {
-            console.error("Error creating sensor:", error);
+            alert(error.message);
         }
     };
 
@@ -87,7 +87,8 @@ const SensorsPage = () => {
             <ul>
                 {sensors.map((sensor) => (
                     <li key={sensor.name}>
-                        <strong>{sensor.name}</strong> - Assigned to Device: {sensor.deviceName || "N/A"}
+                        Sensor name: {sensor.name} - Sensors data{" "}
+                        {sensor.sensorDataDto ? sensor.sensorDataDto.temperature : "No data to sensor"}
                         <button onClick={() => {
                             setSelectedSensor(sensor);
                             setOriginalSensor(sensor)

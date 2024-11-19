@@ -15,7 +15,7 @@ function DevicesPage() {
     const [sensorData, setSensorData] = useState({name: "", sensorName: ""});
     const [selectedDevice, setSelectedDevice] = useState(null);
     const [sensors, setSensors] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false); // Stav modalu
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         if (AuthService.getUserInfo().username === null) {
@@ -30,6 +30,7 @@ function DevicesPage() {
             const response = await DeviceService.getDevices();
             setDevices(response.data);
         } catch (error) {
+            console.error("Error loading devices:", error);
             console.error("Error loading devices:", error);
         }
     };
@@ -59,7 +60,6 @@ function DevicesPage() {
             setSensorData({name: "", sensorName: ""});
             loadDevices();
         } catch (error) {
-            console.log(error.response.data);
             alert(error.response.data);
         }
     };
@@ -67,10 +67,9 @@ function DevicesPage() {
     const handleRemoveSensor = async () => {
         try {
             await DeviceService.removeSensorFromDevice(sensorData);
-            setSensorData({deviceName: "", sensorName: ""});
+            setSensorData({name: "", sensorName: ""});
             loadDevices();
         } catch (error) {
-            console.log(error.response.data);
             alert(error.response.data);
         }
     };
@@ -153,7 +152,7 @@ function DevicesPage() {
                 value={sensorData.sensorName}
                 onChange={(e) => setSensorData({...sensorData, sensorName: e.target.value})}
             >
-                <option value="">Select a sensor</option>
+                <option value="">Select sensor</option>
                 {sensors.map((sensor) => (
                     <option key={sensor.name} value={sensor.name}>
                         {sensor.name}
