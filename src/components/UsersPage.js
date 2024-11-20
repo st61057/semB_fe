@@ -4,15 +4,17 @@ import UserService from "../service/UserService";
 import AuthService from "../service/AuthService";
 import "../Style.css";
 import "../form.css";
+import DeviceService from "../service/DeviceService";
 
 function UsersPage() {
     const navigate = useNavigate();
 
     const [user, setUser] = useState(null);
     const [users, setUsers] = useState([]);
-    const [userDevices, setUserDevices] = useState([]);
+    const [devices, setDevices] = useState([]);
     const [newDevice, setNewDevice] = useState({username: "", deviceName: ""});
     const [updateUserDto, setUpdateUserDto] = useState({loggedUsername: "", username: "", email: ""});
+    const [expandedDevice, setExpandedDevice] = useState(null); // State to track expanded device
     const [passwordData, setPasswordData] = useState({oldPassword: "", newPassword: ""});
     const [registerData, setRegisterData] = useState({username: "", password: "", email: "",});
 
@@ -23,26 +25,17 @@ function UsersPage() {
         if (AuthService.getUserInfo().username === null) {
             navigate("/");
         } else {
-            loadUserInfo();
             loadUsers();
+            loadDevices()
         }
     }, []);
 
     const handleRegister = async () => {
         try {
             const response = await AuthService.register(registerData);
+            loadUsers();
         } catch (error) {
             alert("Adding user: " + error.response?.data || error.message);
-        }
-    };
-
-    const loadUserInfo = async () => {
-        try {
-            const response = await UserService.getUserInfo();
-            setUser(response.data);
-            setUserDevices(response.data.devices || []);
-        } catch (error) {
-            console.error(error);
         }
     };
 
@@ -51,7 +44,16 @@ function UsersPage() {
             const response = await UserService.getUsers();
             setUsers(response.data);
         } catch (error) {
-            console.error("Error loading users:", error);
+            console.error(error.data);
+        }
+    };
+
+    const loadDevices = async () => {
+        try {
+            const response = await DeviceService.getDevices();
+            setDevices(response.data);
+        } catch (error) {
+            console.error("Error loading devices:", error);
         }
     };
 
@@ -59,8 +61,10 @@ function UsersPage() {
         try {
             const response = await UserService.addDeviceToUser(newDevice);
             setUser(response.data);
-            setUserDevices(response.data.devices || []);
+            setDevices(response.data.devices || []);
             setNewDevice({deviceName: ""});
+            loadUsers();
+            loadDevices();
         } catch (error) {
             console.error(error.response);
             alert(error.response?.data || "Failed to add device.");
@@ -71,41 +75,12 @@ function UsersPage() {
         try {
             const response = await UserService.removeDeviceFromUser({username, deviceName});
             setUser(response.data);
-            setUserDevices(response.data.devices || []);
+            setDevices(response.data.devices || []);
+            loadUsers();
+            loadDevices();
         } catch (error) {
             console.error("Error removing device:", error);
             alert(error.response?.data || "Failed to remove device.");
-        }
-    };
-
-    const handleUpdateCurrentUser = async () => {
-        try {
-            updateUserDto.loggedUsername = user.username;
-
-            const updatedUsername = updateUserDto.username || user.username;
-            const updatedEmail = updateUserDto.email || user.email;
-
-            if (updatedUsername === user.username && updatedEmail === user.email) {
-                alert("No changes were made to the user information.");
-                return;
-            }
-
-            const updatePayload = {
-                loggedUsername: updateUserDto.loggedUsername,
-                username: updatedUsername,
-                email: updatedEmail,
-            };
-
-            console.log(updatePayload);
-
-            const response = await UserService.updateUser(updatePayload);
-
-            setUser(response.data);
-            setUpdateUserDto({username: "", email: ""});
-            alert("User information updated successfully.");
-        } catch (error) {
-            console.error(error.response?.data || error.message);
-            alert(error.response?.data || "Failed to update user info.");
         }
     };
 
@@ -121,34 +96,18 @@ function UsersPage() {
         }
     };
 
-    const handleDeleteCurrentUser = async () => {
-        if (window.confirm("Are you sure you want to delete your account?")) {
-            try {
-                await UserService.deleteUser(user.username);
-                AuthService.logout();
-                navigate("/");
-            } catch (error) {
-                console.error("Error deleting user:", error);
-                alert(error.response?.data || "Failed to delete user.");
-            }
-        }
-    };
-
     const handleEditUser = (user) => {
-        setSelectedUser(user);
+        setSelectedUser({...user, loggedUsername: user.username});
         setModalOpen(true);
     };
 
     const handleUpdateUser = async () => {
         try {
             const updateUserRequest = {
-                loggedUsername: user.username,
+                loggedUsername: selectedUser.loggedUsername,
                 username: selectedUser.username,
                 email: selectedUser.email,
             };
-
-            console.log(updateUserRequest);
-
             const response = await UserService.updateUser(updateUserRequest);
 
             alert("User updated successfully!");
@@ -173,60 +132,13 @@ function UsersPage() {
         }
     };
 
+    const toggleExpandedDevice = (username) => {
+        setExpandedDevice((prev) => (prev === username ? null : username));
+    };
+
     return (
         <div className="users-page">
-            <h1 className="page-title">User Management</h1>
-
-            {user && (
-                <section className="user-info">
-                    <h2>Current User Information</h2>
-                    <p>
-                        <strong>Username:</strong> {user.username}
-                    </p>
-                    <p>
-                        <strong>Email:</strong> {user.email}
-                    </p>
-                </section>
-            )}
-
-            <section className="user-devices">
-                <h2>User Devices</h2>
-                {userDevices.length > 0 ? (
-                    <ul className="device-list">
-                        {userDevices.map((device) => (
-                            <li key={device.name} className="device-item">
-                                <span>{device.name}</span>
-                                <button
-                                    className="remove-button"
-                                    onClick={() => handleRemoveDevice(user.username, device.name)}
-                                >
-                                    Remove
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p>No devices assigned.</p>
-                )}
-            </section>
-
-            <section className="add-device">
-                <h2>Add Device</h2>
-                <div className="form-group">
-                    <input
-                        type="text"
-                        placeholder="Device Name"
-                        value={newDevice.deviceName}
-                        onChange={(e) =>
-                            setNewDevice({username: user.username, deviceName: e.target.value})
-                        }
-                    />
-                    <button onClick={handleAddDevice} className="add-button">
-                        Add Device
-                    </button>
-                </div>
-            </section>
-
+            <h1 className="page-title">Users Management</h1>
             <section>
                 <div>
                     <h2>Add user</h2>
@@ -252,68 +164,88 @@ function UsersPage() {
                 </div>
             </section>
 
-            <section className="update-user">
-                <h2>Update Current User Information</h2>
-                <div className="form-group">
-                    <input
-                        type="text"
-                        placeholder="New Username"
-                        value={updateUserDto.username}
-                        onChange={(e) =>
-                            setUpdateUserDto({...updateUserDto, username: e.target.value})
-                        }
-                    />
-                    <input
-                        type="email"
-                        placeholder="New Email"
-                        value={updateUserDto.email}
-                        onChange={(e) =>
-                            setUpdateUserDto({...updateUserDto, email: e.target.value})
-                        }
-                    />
-                    <button onClick={handleUpdateCurrentUser} className="update-button">
-                        Update Info
-                    </button>
-                </div>
-            </section>
-
-            <section className="all-users">
-                <h2>All Users</h2>
-                {users && users.length > 0 ? (
-                    <ul className="user-list">
-                        {users.map((u) => (
-                            <li key={u.username} className="user-item">
+            <section>
+                <h2>Manage devices on users</h2>
+                <ul>
+                    {users.map((user) => (
+                        <li key={user.username}>
+                            <div onClick={() => toggleExpandedDevice(user.username)}>
                                 <div>
-                                    <strong>{u.username}</strong> - {u.email}
+                                    <strong>Username:</strong> {user.username} - <strong>Email:</strong> {user.email}
                                 </div>
-                                <div className="actions">
+                                <div>
                                     <button
                                         className="edit-button"
-                                        onClick={() => handleEditUser(u)}
-                                    >
-                                        Edit
+                                        onClick={() => handleEditUser(user)}
+                                    >Edit
                                     </button>
                                     <button
-                                        className="delete-button"
-                                        onClick={() => handleDeleteUser(u.username)}
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // Prevent triggering the expand toggle
+                                            handleDeleteUser(user.username);
+                                        }}
                                     >
                                         Delete
                                     </button>
                                 </div>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p>No users available.</p>
-                )}
+                            </div>
+                            {expandedDevice === user.username && (
+                                <div>
+                                    <h4>Devices:</h4>
+                                    {user.devices && user.devices.length > 0 ? (
+                                        <table>
+                                            <thead>
+                                            <tr>
+                                                <th>Device Name</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {user.devices.map((device, index) => (
+                                                <tr key={device.id || index}>
+                                                    <td>{device.name}</td>
+                                                    <td>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleRemoveDevice(user.username, device.name)
+                                                            }
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            </tbody>
+                                        </table>
+                                    ) : (
+                                        <p>No devices assigned to this user.</p>
+                                    )}
+
+                                    <h4>Add Device:</h4>
+                                    <select
+                                        value={newDevice.deviceName}
+                                        onChange={(e) =>
+                                            setNewDevice({
+                                                username: user.username,
+                                                deviceName: e.target.value,
+                                            })
+                                        }
+                                    >
+                                        <option value="">Select Device</option>
+                                        {devices.map((device, index) => (
+                                            <option key={device.id || `${device.name}-${index}`} value={device.name}>
+                                                {device.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <button onClick={handleAddDevice}>Add Device</button>
+                                </div>
+                            )}
+                        </li>
+                    ))}
+                </ul>
             </section>
 
-            <section className="delete-account">
-                <h2>Delete Current Account</h2>
-                <button onClick={handleDeleteCurrentUser} className="delete-button">
-                    Delete My Account
-                </button>
-            </section>
 
             {modalOpen && (
                 <div className="modal">

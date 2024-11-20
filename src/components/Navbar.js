@@ -13,6 +13,7 @@ function Navbar({loggedIn}) {
                             <li className="nav-item"><Link className="nav-link" to="/devices">Devices</Link></li>
                             <li className="nav-item"><Link className="nav-link" to="/sensors">Sensors</Link></li>
                             <li className="nav-item"><Link className="nav-link" to="/users">Users</Link></li>
+                            <li className="nav-item"><Link className="nav-link" to="/currentuser">Current user</Link></li>
                             <li className="nav-item"><Link className="nav-link" to="/dashboard">Kibana dashboard</Link></li>
                         </>
                         :
