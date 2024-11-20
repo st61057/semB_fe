@@ -17,7 +17,6 @@ class AuthService {
     }
 
     sendResetCode(username) {
-        console.log(username);
         return axios.post(BASE_URL + 'reset-request/' + username);
     }
 

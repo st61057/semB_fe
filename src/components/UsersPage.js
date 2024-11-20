@@ -44,7 +44,7 @@ function UsersPage() {
             const response = await UserService.getUsers();
             setUsers(response.data);
         } catch (error) {
-            console.error(error.data);
+            alert(error.response.data);
         }
     };
 
@@ -53,7 +53,7 @@ function UsersPage() {
             const response = await DeviceService.getDevices();
             setDevices(response.data);
         } catch (error) {
-            console.error("Error loading devices:", error);
+            alert(error.response.data);
         }
     };
 
@@ -66,7 +66,6 @@ function UsersPage() {
             loadUsers();
             loadDevices();
         } catch (error) {
-            console.error(error.response);
             alert(error.response?.data || "Failed to add device.");
         }
     };
@@ -79,7 +78,6 @@ function UsersPage() {
             loadUsers();
             loadDevices();
         } catch (error) {
-            console.error("Error removing device:", error);
             alert(error.response?.data || "Failed to remove device.");
         }
     };
@@ -91,7 +89,6 @@ function UsersPage() {
             setPasswordData({oldPassword: "", newPassword: ""});
             alert("Password changed successfully.");
         } catch (error) {
-            console.error("Error changing password:", error);
             alert(error.response?.data || "Failed to change password.");
         }
     };
@@ -114,7 +111,6 @@ function UsersPage() {
             setModalOpen(false);
             loadUsers();
         } catch (error) {
-            console.error("Error updating user:", error);
             alert(error.response?.data || "Failed to update user.");
         }
     };
@@ -126,7 +122,6 @@ function UsersPage() {
                 alert("User deleted successfully!");
                 loadUsers();
             } catch (error) {
-                console.error("Error deleting user:", error);
                 alert(error.response?.data || "Failed to delete user.");
             }
         }

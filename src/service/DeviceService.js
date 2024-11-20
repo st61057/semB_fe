@@ -14,7 +14,6 @@ class DeviceService {
     }
 
     addSensorToDevice(deviceSensor) {
-        console.log(deviceSensor);
         return axios.post(BASE_URL + 'device-add-sensor', deviceSensor, AuthService.getAuthHeader());
     }
 

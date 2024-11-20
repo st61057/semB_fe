@@ -29,7 +29,7 @@ function DevicesPage() {
             const response = await DeviceService.getDevices();
             setDevices(response.data);
         } catch (error) {
-            console.error("Error loading devices:", error);
+            alert(error.response.data);
         }
     };
 
@@ -38,7 +38,7 @@ function DevicesPage() {
             const response = await SensorService.getSensors();
             setSensors(response.data);
         } catch (error) {
-            console.error("Error loading sensors:", error);
+            alert(error.response.data);
         }
     };
 
@@ -48,7 +48,7 @@ function DevicesPage() {
             setNewDevice({name: "", location: ""});
             loadDevices();
         } catch (error) {
-            console.error("Error creating device:", error);
+            alert(error.response.data);
         }
     };
 
@@ -77,7 +77,7 @@ function DevicesPage() {
                 await DeviceService.deleteDevice(deviceName);
                 loadDevices();
             } catch (error) {
-                console.error("Error deleting device:", error);
+                alert(error.response.data);
             }
         }
     };

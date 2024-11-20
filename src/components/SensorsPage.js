@@ -18,7 +18,7 @@ const SensorsPage = () => {
             const response = await SensorService.getSensors();
             setSensors(response.data);
         } catch (error) {
-            console.error("Error loading sensors:", error);
+            alert(error.response.data);
         }
     };
 
@@ -28,7 +28,7 @@ const SensorsPage = () => {
             setNewSensor({ name: "", deviceName: "" });
             loadSensors();
         } catch (error) {
-            alert(error.message);
+            alert(error.response.data);
         }
     };
 
@@ -38,7 +38,7 @@ const SensorsPage = () => {
                 await SensorService.deleteSensor(sensorName);
                 loadSensors();
             } catch (error) {
-                console.error("Error deleting sensor:", error);
+                alert(error.response.data);
             }
         }
     };

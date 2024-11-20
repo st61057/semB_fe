@@ -42,7 +42,7 @@ function CurrentUserPage() {
             setUser(response.data);
             setUserDevices(response.data.devices || []);
         } catch (error) {
-            console.error(error);
+            alert(error.response.data);
         }
     };
 
@@ -51,7 +51,7 @@ function CurrentUserPage() {
             const response = await UserService.getUsers();
             setUsers(response.data);
         } catch (error) {
-            console.error("Error loading users:", error);
+            alert(error.response.data);
         }
     };
 
@@ -62,7 +62,6 @@ function CurrentUserPage() {
             setUserDevices(response.data.devices || []);
             setNewDevice({deviceName: ""});
         } catch (error) {
-            console.error(error.response);
             alert(error.response?.data || "Failed to add device.");
         }
     };
@@ -73,7 +72,6 @@ function CurrentUserPage() {
             setUser(response.data);
             setUserDevices(response.data.devices || []);
         } catch (error) {
-            console.error("Error removing device:", error);
             alert(error.response?.data || "Failed to remove device.");
         }
     };
@@ -95,16 +93,12 @@ function CurrentUserPage() {
                 username: updatedUsername,
                 email: updatedEmail,
             };
-
-            console.log(updatePayload);
-
             const response = await UserService.updateUser(updatePayload);
 
             setUser(response.data);
             setUpdateUserDto({username: "", email: ""});
             alert("User information updated successfully.");
         } catch (error) {
-            console.error(error.response?.data || error.message);
             alert(error.response?.data || "Failed to update user info.");
         }
     };
@@ -116,7 +110,6 @@ function CurrentUserPage() {
             setPasswordData({oldPassword: "", newPassword: ""});
             alert("Password changed successfully.");
         } catch (error) {
-            console.error("Error changing password:", error);
             alert(error.response?.data || "Failed to change password.");
         }
     };
@@ -128,7 +121,6 @@ function CurrentUserPage() {
                 AuthService.logout();
                 navigate("/");
             } catch (error) {
-                console.error("Error deleting user:", error);
                 alert(error.response?.data || "Failed to delete user.");
             }
         }
@@ -147,15 +139,12 @@ function CurrentUserPage() {
                 email: selectedUser.email,
             };
 
-            console.log(updateUserRequest);
-
             const response = await UserService.updateUser(updateUserRequest);
 
             alert("User updated successfully!");
             setModalOpen(false);
             loadUsers();
         } catch (error) {
-            console.error("Error updating user:", error);
             alert(error.response?.data || "Failed to update user.");
         }
     };
@@ -167,7 +156,6 @@ function CurrentUserPage() {
                 alert("User deleted successfully!");
                 loadUsers();
             } catch (error) {
-                console.error("Error deleting user:", error);
                 alert(error.response?.data || "Failed to delete user.");
             }
         }
