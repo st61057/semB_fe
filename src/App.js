@@ -11,6 +11,7 @@ import RegisterPage from "./components/RegisterPage";
 import ResetRequestPage from "./components/ResetRequestPage";
 import SensorsPage from "./components/SensorsPage";
 import UsersPage from "./components/UsersPage";
+import DashboardPage from "./components/DashboardPage";
 
 function App() {
     const [loggedIn, setLoggedIn] = useState(AuthService.getUserInfo() !== null);
@@ -25,6 +26,7 @@ function App() {
                     <Route path="/change_password" element={<ChangePasswordPage/>}/>
                     <Route path="/logout" element={<LogoutPage {...{setLoggedIn}}/>}/>
                     <Route path="/devices" element={<DevicesPage/>}/>
+                    <Route path="/dashboard" element={<DashboardPage/>}/>
                     <Route path="/sensors" element={<SensorsPage/>}/>
                     <Route path="/users" element={<UsersPage/>}/>
                     <Route path="/register" element={<RegisterPage/>}/>
